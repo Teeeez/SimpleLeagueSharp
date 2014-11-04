@@ -128,8 +128,6 @@ namespace SimpleTristana
 
             if (E.IsReady() && target.Health + (target.HPRegenRate / 5 * 3) + 50 < (ObjectManager.Player.GetSpellDamage(target, SpellSlot.E) / 5 * QbMenu.Item("SingleESlider").GetValue<Slider>().Value))
                 E.Cast(target, QbMenu.Item("NFD").GetValue<bool>());
-
-            Game.PrintChat(System.Convert.ToString((ObjectManager.Player.GetSpellDamage(target, SpellSlot.E) / 5 * QbMenu.Item("SingleESlider").GetValue<Slider>().Value)));
         }
 
         public static void FullE()
