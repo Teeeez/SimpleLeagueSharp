@@ -8,22 +8,18 @@ using LeagueSharp;
 using LeagueSharp.Common;
 using System.Drawing;
 using SharpDX;
-using Color = System.Drawing.Color;
 
-namespace SimpleTristana
+namespace SimpleKarthus
 {
     class Program
     {
-        
-        public static string ChampName = "Tristana";
+
+        public static string ChampName = "Karthus";
         public static Orbwalking.Orbwalker Orbwalker;
         public static Obj_AI_Base Player = ObjectManager.Player;
         public static Obj_AI_Hero PlayerH = ObjectManager.Player;
         public static Spell Q, W, E, R;
         public static Items.Item DfgItem = new Items.Item(3128, 750);
-        public static Items.Item BilgeItem = new Items.Item(3144, 450);
-        public static Items.Item BladeItem = new Items.Item(3153, 450);
-        public static Items.Item GhostItem = new Items.Item(3142, float.MaxValue);
 
         public static Menu QbMenu;
         static void Main(string[] args)
@@ -35,10 +31,14 @@ namespace SimpleTristana
         {
             if (Player.BaseSkinName != ChampName) return;
 
-            Q = new Spell(SpellSlot.Q);
-            W = new Spell(SpellSlot.W, 0);
-            E = new Spell(SpellSlot.E, 541);
-            R = new Spell(SpellSlot.R, 541);
+            Q = new Spell(SpellSlot.Q, 875);
+            Q.SetSkillshot(1f,160f,float.MaxValue,false,SkillshotType.SkillshotCircle);
+            W = new Spell(SpellSlot.W, 1000);
+            W.SetSkillshot(.5f, 70f,float.MaxValue,false,SkillshotType.SkillshotCircle);
+            E = new Spell(SpellSlot.E, 550);
+            W.SetSkillshot(1f, 505f,float.MaxValue, false, SkillshotType.SkillshotCircle);
+            R = new Spell(SpellSlot.R, float.MaxValue);
+            R.SetSkillshot(3f, float.MaxValue,float.MaxValue,false,SkillshotType.SkillshotCircle);
             //Base menu
             QbMenu = new Menu("Simple" + ChampName, ChampName, true);
             //Orbwalker and menu
@@ -51,11 +51,13 @@ namespace SimpleTristana
             //Combo menu
             QbMenu.AddSubMenu(new Menu("Combo", "Combo"));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("useQ", "Use Q").SetValue(false));
+            QbMenu.SubMenu("Combo").AddItem(new MenuItem("useW", "Use W").SetValue(false));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("useE", "Use E").SetValue(false));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("ComboKey", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
             //Harras menu
             QbMenu.AddSubMenu(new Menu("Harras", "Harras"));
             QbMenu.SubMenu("Harras").AddItem(new MenuItem("useHQ", "Use Q").SetValue(false));
+            QbMenu.SubMenu("Harras").AddItem(new MenuItem("useHW", "Use W").SetValue(false));
             QbMenu.SubMenu("Harras").AddItem(new MenuItem("useHE", "Use E").SetValue(false));
             QbMenu.SubMenu("Harras").AddItem(new MenuItem("HarrasKey", "Harras Key").SetValue(new KeyBind(67, KeyBindType.Press)));
             QbMenu.SubMenu("Harras").AddItem(new MenuItem("HarrasKey2", "Harras Key 2").SetValue(new KeyBind(86, KeyBindType.Press)));
@@ -67,18 +69,10 @@ namespace SimpleTristana
             //Ultimate & KS
             QbMenu.AddSubMenu(new Menu("Killsteal", "Killsteal"));
             QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("autoR", "Auto Ultimate").SetValue(false));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("FullE", "Full E").SetValue(false));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("SingleETick", "Few E Ticks").SetValue(false));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("SingleESlider", "How much Ticks").SetValue(new Slider(4, 1, 5)));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("BotrkSteal", "Botrk").SetValue(false));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("BilgeSteal", "Bilgewater C").SetValue(false));
             QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("DfgSteal", "DFG").SetValue(false));
             //Items
             QbMenu.AddSubMenu(new Menu("Items", "Items"));
-            QbMenu.SubMenu("Items").AddItem(new MenuItem("bilge", "Bilgewater C").SetValue(false));
-            QbMenu.SubMenu("Items").AddItem(new MenuItem("botrk", "Blade of the Ruined King").SetValue(false));
-            QbMenu.SubMenu("Items").AddItem(new MenuItem("bomh", "Wait for max heal with blade").SetValue(false));
-            QbMenu.SubMenu("Items").AddItem(new MenuItem("ghostbl", "Ghostblade").SetValue(false));
+            QbMenu.SubMenu("Items").AddItem(new MenuItem("useseraph", "Seraphs").SetValue(false));
             QbMenu.SubMenu("Items").AddItem(new MenuItem("usedfg", "Deathfire Grasp").SetValue(false));
             //Misc
             QbMenu.AddSubMenu(new Menu("Misc", "Misc"));
@@ -94,6 +88,7 @@ namespace SimpleTristana
             Game.OnGameUpdate += Game_OnGameUpdate; // onTick in bol
 
             Game.PrintChat("Simple" + ChampName + " loaded!");
+            Game.PrintChat("Work in progress, assembly might not working.");
         }
 
         static void Game_OnGameUpdate(EventArgs args)
@@ -102,154 +97,27 @@ namespace SimpleTristana
             {
                 Combo();
             }
-            if (QbMenu.Item("HarrasKey").GetValue<KeyBind>().Active || QbMenu.Item("HarrasKey2").GetValue<KeyBind>().Active)
-            {
-                Harras();
-            }
-            if (QbMenu.Item("LaneclearKey").GetValue<KeyBind>().Active)
-            {
-                Laneclear();
-            }
-            if (QbMenu.Item("autoR").GetValue<bool>())
-            {
-                AutoR();
-            }
-            if (QbMenu.Item("SingleETick").GetValue<bool>())
-            {
-                SingleE();
-            }
-            if (QbMenu.Item("FullE").GetValue<bool>())
-            {
-                FullE();
-            }
-            if (QbMenu.Item("BotrkSteal").GetValue<bool>() && BladeItem.IsReady())
-            {
-                BotrkSteal();
-            }
-            if (QbMenu.Item("BilgeSteal").GetValue<bool>() && BilgeItem.IsReady())
-            {
-                BilgeSteal();
-            }
-            if (QbMenu.Item("DfgSteal").GetValue<bool>() && DfgItem.IsReady())
-            {
-                DfgSteal();
-            }
         }
 
         static void Drawing_OnDraw(EventArgs args)
         {
-            if (QbMenu.Item("MarkR").GetValue<bool>())
-            {
-                var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget() && R.IsKillable(obj));
-                if(unit != null)
-                    Utility.DrawCircle(unit.ServerPosition,63,Color.Fuchsia);
-            }
+
         }
 
-        public static void DfgSteal()
-        {
-            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && PlayerH.GetItemDamage(obj, Damage.DamageItems.Dfg) >= obj.Health);
-            if (unit != null)
-            {
-                DfgItem.Cast(unit);
-            }
-        }
-
-        public static void BilgeSteal()
-        {
-            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && PlayerH.GetItemDamage(obj, Damage.DamageItems.Bilgewater) >= obj.Health);
-            if (unit != null)
-            {
-                BilgeItem.Cast(unit);
-            }
-        }
-
-        public static void BotrkSteal()
-        {
-            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && PlayerH.GetItemDamage(obj,Damage.DamageItems.Botrk) >= obj.Health);
-            if (unit != null)
-            {
-                BladeItem.Cast(unit);
-            }
-        }
-
-        public static void SingleE()
+       
+        public static void Combo()
         {
             var target = SimpleTs.GetTarget(Player.AttackRange, SimpleTs.DamageType.Magical);
             if (target == null) return;
-
-            if (E.IsReady() && target.Health + (target.HPRegenRate / 5 * 3) + 50 < (ObjectManager.Player.GetSpellDamage(target, SpellSlot.E) / 5 * QbMenu.Item("SingleESlider").GetValue<Slider>().Value))
-                E.Cast(target, QbMenu.Item("NFD").GetValue<bool>());
-        }
-
-        public static void FullE()
-        {
-            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && E.IsKillable(obj));
-            if (unit != null)
-            {
-                E.Cast(unit);
-            }
-        }
-
-        public static void AutoR()
-        {
-            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && R.IsKillable(obj));
-            if (unit != null)
-            {
-                R.Cast(unit);
-            }
-        }
-
-        public static void Combo()
-        {
-            var target = SimpleTs.GetTarget(Player.AttackRange, SimpleTs.DamageType.Physical);
-            if (target == null) return;
-
             var castQ = QbMenu.Item("useQ").GetValue<bool>();
             var castE = QbMenu.Item("useE").GetValue<bool>();
-
-            if (QbMenu.Item("ghostbl").GetValue<bool>() && GhostItem.IsReady() && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)))
-            {
-                GhostItem.Cast();
-            }
-            if (QbMenu.Item("bilge").GetValue<bool>() && BilgeItem.IsReady() && target.IsValidTarget(BilgeItem.Range))
-            {
-                BilgeItem.Cast();
-            }
-            if (QbMenu.Item("botrk").GetValue<bool>() && BladeItem.IsReady() && target.IsValidTarget(BladeItem.Range))
-            {
-                if (QbMenu.Item("bomh").GetValue<bool>())
-                {
-                    if (PlayerH.GetItemDamage(target, Damage.DamageItems.Botrk) + Player.Health <= Player.MaxHealth)
-                    {
-                        BladeItem.Cast(target);
-                    }
-                }
-                else
-                {
-                    BladeItem.Cast(target);
-                }
-            }
+            var test = PlayerH.GetItemDamage(target, Damage.DamageItems.Botrk);
 
             if (QbMenu.Item("usedfg").GetValue<bool>() && DfgItem.IsReady() && target.IsValidTarget(DfgItem.Range))
             {
                 DfgItem.Cast(target);
             }
 
-            if (QbMenu.Item("APMode").GetValue<bool>())
-            {
-                if (castE && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && E.IsReady())
-                {
-                    E.Cast(target, QbMenu.Item("NFD").GetValue<bool>());
-                }
-
-                if (castQ && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && Q.IsReady())
-                {
-                    Q.Cast();
-                }
-            }
-            else
-            {
                 if (castQ && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && Q.IsReady())
                 {
                     Q.Cast();
@@ -259,7 +127,7 @@ namespace SimpleTristana
                 {
                     E.Cast(target, QbMenu.Item("NFD").GetValue<bool>());
                 }
-            }
+            
         }
 
         public static void Harras()
@@ -302,7 +170,7 @@ namespace SimpleTristana
                 {
                     if (minion.IsValidTarget(Player.AttackRange))
                     {
-                        E.Cast(minion, QbMenu.Item("NFD").GetValue<bool>());
+                        E.Cast(minion, true);
                     }
                 }
             }
