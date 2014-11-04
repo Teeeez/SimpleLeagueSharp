@@ -12,7 +12,7 @@ namespace SimpleTristana
 {
     class Program
     {
-
+        
         public static string ChampName = "Tristana";
         public static Orbwalking.Orbwalker Orbwalker;
         public static Obj_AI_Base Player = ObjectManager.Player;
