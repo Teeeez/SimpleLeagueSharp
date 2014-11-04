@@ -19,6 +19,7 @@ namespace SimpleTristana
         public static Obj_AI_Hero PlayerH = ObjectManager.Player;
         public static Spell Q, W, E, R;
         public static Items.Item DfgItem = new Items.Item(3128, 750);
+        public static Items.Item BilgeItem = new Items.Item(3144, 450);
         public static Items.Item BladeItem = new Items.Item(3153, 450);
         public static Items.Item GhostItem = new Items.Item(3142, float.MaxValue);
 
@@ -67,8 +68,12 @@ namespace SimpleTristana
             QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("FullE", "Full E").SetValue(false));
             QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("SingleETick", "Few E Ticks").SetValue(false));
             QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("SingleESlider", "How much Ticks").SetValue(new Slider(4, 1, 5)));
+            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("BotrkSteal", "Botrk").SetValue(false));
+            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("BilgeSteal", "Bilgewater C").SetValue(false));
+            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("DfgSteal", "DFG").SetValue(false));
             //Items
             QbMenu.AddSubMenu(new Menu("Items", "Items"));
+            QbMenu.SubMenu("Items").AddItem(new MenuItem("bilge", "Bilgewater C").SetValue(false));
             QbMenu.SubMenu("Items").AddItem(new MenuItem("botrk", "Blade of the Ruined King").SetValue(false));
             QbMenu.SubMenu("Items").AddItem(new MenuItem("bomh", "Wait for max heal with blade").SetValue(false));
             QbMenu.SubMenu("Items").AddItem(new MenuItem("ghostbl", "Ghostblade").SetValue(false));
@@ -114,11 +119,50 @@ namespace SimpleTristana
             {
                 FullE();
             }
+            if (QbMenu.Item("BotrkSteal").GetValue<bool>() && BladeItem.IsReady())
+            {
+                BotrkSteal();
+            }
+            if (QbMenu.Item("BilgeSteal").GetValue<bool>() && BilgeItem.IsReady())
+            {
+                BilgeSteal();
+            }
+            if (QbMenu.Item("DfgSteal").GetValue<bool>() && DfgItem.IsReady())
+            {
+                DfgSteal();
+            }
         }
 
         static void Drawing_OnDraw(EventArgs args)
         {
 
+        }
+
+        public static void DfgSteal()
+        {
+            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && PlayerH.GetItemDamage(obj, Damage.DamageItems.Dfg) >= obj.Health);
+            if (unit != null)
+            {
+                DfgItem.Cast(unit);
+            }
+        }
+
+        public static void BilgeSteal()
+        {
+            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && PlayerH.GetItemDamage(obj, Damage.DamageItems.Bilgewater) >= obj.Health);
+            if (unit != null)
+            {
+                BilgeItem.Cast(unit);
+            }
+        }
+
+        public static void BotrkSteal()
+        {
+            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && PlayerH.GetItemDamage(obj,Damage.DamageItems.Botrk) >= obj.Health);
+            if (unit != null)
+            {
+                BladeItem.Cast(unit);
+            }
         }
 
         public static void SingleE()
@@ -160,7 +204,10 @@ namespace SimpleTristana
             {
                 GhostItem.Cast();
             }
-
+            if (QbMenu.Item("bilge").GetValue<bool>() && BilgeItem.IsReady() && target.IsValidTarget(BilgeItem.Range))
+            {
+                BilgeItem.Cast();
+            }
             if (QbMenu.Item("botrk").GetValue<bool>() && BladeItem.IsReady() && target.IsValidTarget(BladeItem.Range))
             {
                 if (QbMenu.Item("bomh").GetValue<bool>())
