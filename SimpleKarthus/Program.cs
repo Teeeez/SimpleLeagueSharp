@@ -54,6 +54,12 @@ namespace SimpleKarthus
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("useW", "Use W").SetValue(false));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("useE", "Use E").SetValue(false));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("ComboKey", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
+
+            QbMenu.AddSubMenu(new Menu("advCombo", "Advanced Combo"));
+            QbMenu.SubMenu("advCombo").AddItem(new MenuItem("advuseQ", "Use Q").SetValue(false));
+            QbMenu.SubMenu("advCombo").AddItem(new MenuItem("advuseW", "Use W").SetValue(false));
+            QbMenu.SubMenu("advCombo").AddItem(new MenuItem("advuseE", "Use E").SetValue(false));
+            QbMenu.SubMenu("advCombo").AddItem(new MenuItem("ComboKey", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
             //Harras menu
             QbMenu.AddSubMenu(new Menu("Harras", "Harras"));
             QbMenu.SubMenu("Harras").AddItem(new MenuItem("useHQ", "Use Q").SetValue(false));
@@ -104,7 +110,31 @@ namespace SimpleKarthus
 
         }
 
-       
+        public static void AdvCombo()
+        {
+            const float x = 500;
+            var target = SimpleTs.GetTarget(Player.AttackRange+x, SimpleTs.DamageType.Magical);
+            if (target == null)
+                return;
+
+            var castQ = QbMenu.Item("advuseQ").GetValue<bool>();
+            var castE = QbMenu.Item("advuseE").GetValue<bool>();
+
+            if (QbMenu.Item("usedfg").GetValue<bool>() && DfgItem.IsReady() && target.IsValidTarget(DfgItem.Range))
+            {
+                DfgItem.Cast(target);
+            }
+
+            if (castQ && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && Q.IsReady())
+            {
+                Q.Cast(target);
+            }
+
+            if (castE && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && E.IsReady())
+            {
+                E.Cast();
+            }
+        }
         public static void Combo()
         {
             var target = SimpleTs.GetTarget(Player.AttackRange, SimpleTs.DamageType.Magical);

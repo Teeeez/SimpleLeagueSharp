@@ -140,9 +140,13 @@ namespace SimpleTristana
         {
             if (QbMenu.Item("MarkR").GetValue<bool>())
             {
-                var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget() && R.IsKillable(obj));
-                if(unit != null)
-                    Utility.DrawCircle(unit.ServerPosition,63,Color.Fuchsia);
+                var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(1400) && R.IsKillable(obj));
+                if (unit != null)
+                {
+                    Utility.DrawCircle(unit.ServerPosition, 63, Color.Fuchsia);
+                    Drawing.DrawText(Player.ServerPosition.X, Player.ServerPosition.Y, Color.Fuchsia, unit.ChampionName + " is killable.");
+                }
+                    
             }
         }
 
