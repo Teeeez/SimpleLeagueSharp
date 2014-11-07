@@ -84,8 +84,6 @@ namespace SimpleUrgot
             QbMenu.SubMenu("Lasthit").AddItem(new MenuItem("LasthitKey", "Lasthit Key").SetValue(new KeyBind(88, KeyBindType.Press)));
             //Ultimate & KS
             QbMenu.AddSubMenu(new Menu("Killsteal", "Killsteal"));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("KSwQ", "Use Q").SetValue(false));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("KSwE", "Use E").SetValue(false));
             QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("BotrkSteal", "Botrk").SetValue(false));
             QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("BilgeSteal", "Bilgewater C").SetValue(false));
             //Items
