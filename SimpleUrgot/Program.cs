@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using LeagueSharp;
@@ -10,20 +11,21 @@ using System.Drawing;
 using SharpDX;
 using Color = System.Drawing.Color;
 
-namespace SimpleTristana
+namespace SimpleUrgot
 {
     class Program
     {
-        
-        public static string ChampName = "Tristana";
+
+        public static string ChampName = "Urgot";
         public static Orbwalking.Orbwalker Orbwalker;
         public static Obj_AI_Base Player = ObjectManager.Player;
         public static Obj_AI_Hero PlayerH = ObjectManager.Player;
-        public static Spell Q, W, E, R;
+        public static Spell Q, Q2, W, E, R;
         public static Items.Item DfgItem = new Items.Item(3128, 750);
         public static Items.Item BilgeItem = new Items.Item(3144, 450);
         public static Items.Item BladeItem = new Items.Item(3153, 450);
         public static Items.Item GhostItem = new Items.Item(3142, float.MaxValue);
+        public static Items.Item MuraItem = new Items.Item(3042, float.MaxValue);
 
         public static Menu QbMenu;
         static void Main(string[] args)
@@ -35,10 +37,15 @@ namespace SimpleTristana
         {
             if (Player.BaseSkinName != ChampName) return;
 
-            Q = new Spell(SpellSlot.Q);
-            W = new Spell(SpellSlot.W, 0);
-            E = new Spell(SpellSlot.E, 541);
-            R = new Spell(SpellSlot.R, 541);
+            Q = new Spell(SpellSlot.Q, 1000);
+            Q.SetSkillshot(0.10f, 100f, 1600f, true, SkillshotType.SkillshotLine);
+            Q2 = new Spell(SpellSlot.Q, 1200);
+            Q2.SetSkillshot(0.10f, 100f, 1600f, false, SkillshotType.SkillshotLine);
+            W = new Spell(SpellSlot.W);
+            E = new Spell(SpellSlot.E, 900);
+            E.SetSkillshot(0.283f, 50f, 1750f, false, SkillshotType.SkillshotCircle);
+            R = new Spell(SpellSlot.R, 550);
+
             //Base menu
             QbMenu = new Menu("Simple" + ChampName, ChampName, true);
             //Orbwalker and menu
@@ -51,41 +58,49 @@ namespace SimpleTristana
             //Combo menu
             QbMenu.AddSubMenu(new Menu("Combo", "Combo"));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("useQ", "Use Q").SetValue(false));
+            QbMenu.SubMenu("Combo").AddItem(new MenuItem("useW", "Use W").SetValue(false));
+            QbMenu.SubMenu("Combo").AddItem(new MenuItem("useSW", "Smart W").SetValue(false));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("useE", "Use E").SetValue(false));
+            QbMenu.SubMenu("Combo").AddItem(new MenuItem("ComboMana", "Mana").SetValue(new Slider(1, 1, 100)));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("ComboKey", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
             //Harass menu
             QbMenu.AddSubMenu(new Menu("Harass", "Harass"));
             QbMenu.SubMenu("Harass").AddItem(new MenuItem("useHQ", "Use Q").SetValue(false));
+            QbMenu.SubMenu("Harass").AddItem(new MenuItem("useHW", "Smart W").SetValue(false));
             QbMenu.SubMenu("Harass").AddItem(new MenuItem("useHE", "Use E").SetValue(false));
-            QbMenu.SubMenu("Harass").AddItem(new MenuItem("HarassKey", "Harass Key").SetValue(new KeyBind(67, KeyBindType.Press)));
+            QbMenu.SubMenu("Harass").AddItem(new MenuItem("HarassMana", "Mana").SetValue(new Slider(40, 1, 100)));
+            QbMenu.SubMenu("Harass").AddItem(new MenuItem("HarassKey", "Hahrass Key").SetValue(new KeyBind(67, KeyBindType.Press)));
             QbMenu.SubMenu("Harass").AddItem(new MenuItem("HarassKey2", "Harass Key 2").SetValue(new KeyBind(86, KeyBindType.Press)));
             //LaneClear
             QbMenu.AddSubMenu(new Menu("Laneclear", "Laneclear"));
             QbMenu.SubMenu("Laneclear").AddItem(new MenuItem("useLQ", "Use Q").SetValue(false));
             QbMenu.SubMenu("Laneclear").AddItem(new MenuItem("useLE", "Use E").SetValue(false));
+            QbMenu.SubMenu("Laneclear").AddItem(new MenuItem("LaneMana", "Mana").SetValue(new Slider(30, 1, 100)));
             QbMenu.SubMenu("Laneclear").AddItem(new MenuItem("LaneclearKey", "Laneclear Key").SetValue(new KeyBind(86, KeyBindType.Press)));
+            //Lasthit
+            QbMenu.AddSubMenu(new Menu("Lasthit", "Lasthit"));
+            QbMenu.SubMenu("Lasthit").AddItem(new MenuItem("useLhQ", "Use Q").SetValue(false));
+            QbMenu.SubMenu("Lasthit").AddItem(new MenuItem("LastMana", "Mana").SetValue(new Slider(40, 1, 100)));
+            QbMenu.SubMenu("Lasthit").AddItem(new MenuItem("LasthitKey", "Lasthit Key").SetValue(new KeyBind(88, KeyBindType.Press)));
             //Ultimate & KS
             QbMenu.AddSubMenu(new Menu("Killsteal", "Killsteal"));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("autoR", "Auto Ultimate").SetValue(false));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("FullE", "Full E").SetValue(false));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("SingleETick", "Few E Ticks").SetValue(false));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("SingleESlider", "How much Ticks").SetValue(new Slider(4, 1, 5)));
+            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("KSwQ", "Use Q").SetValue(false));
+            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("KSwE", "Use E").SetValue(false));
             QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("BotrkSteal", "Botrk").SetValue(false));
             QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("BilgeSteal", "Bilgewater C").SetValue(false));
-            QbMenu.SubMenu("Killsteal").AddItem(new MenuItem("DfgSteal", "DFG").SetValue(false));
             //Items
             QbMenu.AddSubMenu(new Menu("Items", "Items"));
             QbMenu.SubMenu("Items").AddItem(new MenuItem("bilge", "Bilgewater C").SetValue(false));
             QbMenu.SubMenu("Items").AddItem(new MenuItem("botrk", "Blade of the Ruined King").SetValue(false));
             QbMenu.SubMenu("Items").AddItem(new MenuItem("bomh", "Wait for max heal with blade").SetValue(false));
             QbMenu.SubMenu("Items").AddItem(new MenuItem("ghostbl", "Ghostblade").SetValue(false));
-            QbMenu.SubMenu("Items").AddItem(new MenuItem("usedfg", "Deathfire Grasp").SetValue(false));
-            //Misc
+            QbMenu.SubMenu("Items").AddItem(new MenuItem("mura", "Muramana").SetValue(false));
+            //Misc #soon
             QbMenu.AddSubMenu(new Menu("Misc", "Misc"));
-            QbMenu.SubMenu("Misc").AddItem(new MenuItem("APMode", "Combo E > Q").SetValue(false));
-            QbMenu.SubMenu("Misc").AddItem(new MenuItem("MarkR", "maRk killable Enemy").SetValue(false));
-            //Exploits
-            QbMenu.AddItem(new MenuItem("NFD", "No Face Direction Exploit").SetValue(false));
+            QbMenu.SubMenu("Misc").AddItem(new MenuItem("drawq", "Draw Q").SetValue(false));
+            QbMenu.SubMenu("Misc").AddItem(new MenuItem("drawq2", "Draw Q2").SetValue(false));
+            QbMenu.SubMenu("Misc").AddItem(new MenuItem("drawe", "Draw E").SetValue(false));
+
             QbMenu.AddItem(new MenuItem("madeby", "Made by Pataxx").DontSave());
 
             QbMenu.AddToMainMenu();
@@ -110,17 +125,9 @@ namespace SimpleTristana
             {
                 Laneclear();
             }
-            if (QbMenu.Item("autoR").GetValue<bool>())
+            if (QbMenu.Item("LasthitKey").GetValue<KeyBind>().Active)
             {
-                AutoR();
-            }
-            if (QbMenu.Item("SingleETick").GetValue<bool>())
-            {
-                SingleE();
-            }
-            if (QbMenu.Item("FullE").GetValue<bool>())
-            {
-                FullE();
+                Lasthit();
             }
             if (QbMenu.Item("BotrkSteal").GetValue<bool>() && BladeItem.IsReady())
             {
@@ -130,32 +137,28 @@ namespace SimpleTristana
             {
                 BilgeSteal();
             }
-            if (QbMenu.Item("DfgSteal").GetValue<bool>() && DfgItem.IsReady())
+            if (!QbMenu.Item("mura").GetValue<bool>() && Player.HasBuff("Muramana") && MuraItem.IsReady())
             {
-                DfgSteal();
+                MuraItem.Cast();
             }
+
         }
 
         static void Drawing_OnDraw(EventArgs args)
         {
-            if (QbMenu.Item("MarkR").GetValue<bool>())
+            if (!QbMenu.Item("drawq").GetValue<bool>() && Q.IsReady())
             {
-                var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(float.MaxValue) && R.IsKillable(obj));
-                if (unit != null)
-                {
-                    Utility.DrawCircle(unit.ServerPosition, 63, Color.Fuchsia);
-                    Drawing.DrawText(Player.ServerPosition.X, Player.ServerPosition.Y, Color.Fuchsia, unit.ChampionName + " is killable.");
-                }
-                    
+                Utility.DrawCircle(Player.ServerPosition,Q.Range,Color.Crimson);
             }
-        }
 
-        public static void DfgSteal()
-        {
-            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && PlayerH.GetItemDamage(obj, Damage.DamageItems.Dfg) >= obj.Health);
-            if (unit != null)
+            if (!QbMenu.Item("drawq2").GetValue<bool>() && Q.IsReady())
             {
-                DfgItem.Cast(unit);
+                Utility.DrawCircle(Player.ServerPosition, Q2.Range, Color.DarkRed);
+            }
+
+            if (!QbMenu.Item("drawE").GetValue<bool>() && E.IsReady())
+            {
+                Utility.DrawCircle(Player.ServerPosition, E.Range, Color.Chartreuse);
             }
         }
 
@@ -170,47 +173,22 @@ namespace SimpleTristana
 
         public static void BotrkSteal()
         {
-            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && PlayerH.GetItemDamage(obj,Damage.DamageItems.Botrk) >= obj.Health);
+            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && PlayerH.GetItemDamage(obj, Damage.DamageItems.Botrk) >= obj.Health);
             if (unit != null)
             {
                 BladeItem.Cast(unit);
             }
         }
 
-        public static void SingleE()
-        {
-            var target = SimpleTs.GetTarget(Player.AttackRange, SimpleTs.DamageType.Magical);
-            if (target == null) return;
-
-            if (E.IsReady() && target.Health + (target.HPRegenRate / 5 * 3) + 50 < (ObjectManager.Player.GetSpellDamage(target, SpellSlot.E) / 5 * QbMenu.Item("SingleESlider").GetValue<Slider>().Value))
-                E.Cast(target, QbMenu.Item("NFD").GetValue<bool>());
-        }
-
-        public static void FullE()
-        {
-            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && E.IsKillable(obj));
-            if (unit != null)
-            {
-                E.Cast(unit);
-            }
-        }
-
-        public static void AutoR()
-        {
-            var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && R.IsKillable(obj));
-            if (unit != null)
-            {
-                R.Cast(unit);
-            }
-        }
-
         public static void Combo()
         {
-            var target = SimpleTs.GetTarget(Player.AttackRange, SimpleTs.DamageType.Physical);
-            if (target == null) return;
+            var target = SimpleTs.GetTarget(Q2.Range, SimpleTs.DamageType.Physical);
+            if (target == null || Player.Mana <= Player.MaxMana * (QbMenu.Item("ComboMana").GetValue<int>() / 100.0)) return;
 
             var castQ = QbMenu.Item("useQ").GetValue<bool>();
             var castE = QbMenu.Item("useE").GetValue<bool>();
+            var castW = QbMenu.Item("useW").GetValue<bool>();
+            var castSw = QbMenu.Item("useSW").GetValue<bool>();
 
             if (QbMenu.Item("ghostbl").GetValue<bool>() && GhostItem.IsReady() && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)))
             {
@@ -234,85 +212,120 @@ namespace SimpleTristana
                     BladeItem.Cast(target);
                 }
             }
-
-            if (QbMenu.Item("usedfg").GetValue<bool>() && DfgItem.IsReady() && target.IsValidTarget(DfgItem.Range))
+            if(QbMenu.Item("mura").GetValue<bool>() && MuraItem.IsReady() && !Player.HasBuff("Muramana") && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)))
             {
-                DfgItem.Cast(target);
+                MuraItem.Cast();
             }
 
-            if (QbMenu.Item("APMode").GetValue<bool>())
+            if (castE && target.IsValidTarget(E.Range) && E.IsReady())
             {
-                if (castE && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && E.IsReady())
-                {
-                    E.Cast(target, QbMenu.Item("NFD").GetValue<bool>());
-                }
-
-                if (castQ && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && Q.IsReady())
-                {
-                    Q.Cast();
-                }
+                E.CastIfHitchanceEquals(target, HitChance.Medium);
             }
-            else
+
+            if (castW && !QbMenu.Item("useSW").GetValue<bool>() && castSw && W.IsReady())
             {
-                if (castQ && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && Q.IsReady())
-                {
-                    Q.Cast();
-                }
-
-                if (castE && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && E.IsReady())
-                {
-                    E.Cast(target, QbMenu.Item("NFD").GetValue<bool>());
-                }
+                W.Cast();
             }
+
+            if (castQ && target.IsValidTarget(Q2.Range) && target.HasBuff("urgotcorrosivedebuff", true) && Q2.IsReady())
+            {
+                if (castW && W.IsReady())
+                {
+                    W.Cast();
+                }
+                Q2.Cast(target.ServerPosition);
+            }
+
+            if (castQ && target.IsValidTarget(Q.Range) && Q.IsReady())
+            {
+                Q.Cast(target.ServerPosition);
+            }
+
+            
+
         }
 
         public static void Harass()
         {
-            var target = SimpleTs.GetTarget(Player.AttackRange, SimpleTs.DamageType.Physical);
-            if (target == null) return;
+            var target = SimpleTs.GetTarget(Q2.Range, SimpleTs.DamageType.Physical);
+            if (target == null || Player.Mana <= Player.MaxMana * (QbMenu.Item("HarassMana").GetValue<int>() / 100.0)) return;
             var castQ = QbMenu.Item("useHQ").GetValue<bool>();
             var castE = QbMenu.Item("useHE").GetValue<bool>();
-            if (castQ && target.IsValidTarget() && Q.IsReady())
+            var castW = QbMenu.Item("useHW").GetValue<bool>();
+
+            if (castE && target.IsValidTarget(E.Range) && E.IsReady())
             {
-                Q.Cast();
+                E.CastIfHitchanceEquals(target, HitChance.Medium);
             }
-            if (castE && target.IsValidTarget(Orbwalking.GetRealAutoAttackRange(Player)) && E.IsReady())
+
+            if (castQ && target.IsValidTarget(Q2.Range) && target.HasBuff("urgotcorrosivedebuff", true) && Q2.IsReady())
             {
-                E.Cast(target, QbMenu.Item("NFD").GetValue<bool>());
+                if (castW && W.IsReady())
+                {
+                    W.Cast();
+                }
+
+                Q2.Cast(target.ServerPosition);
+
+            }
+            else
+            {
+                if (castQ && target.IsValidTarget(Q.Range) && Q.IsReady())
+                {
+                    Q.Cast(target.ServerPosition);
+                }
             }
         }
 
         public static void Laneclear()
         {
-            if (!Orbwalking.CanMove(40)) return;
+            if (!Orbwalking.CanMove(40) || Player.Mana <= Player.MaxMana * (QbMenu.Item("LaneMana").GetValue<int>() / 100.0)) return;
             var myMinions = MinionManager.GetMinions(Player.ServerPosition, Player.AttackRange);
             var castQ = QbMenu.Item("useLQ").GetValue<bool>();
             var castE = QbMenu.Item("useLE").GetValue<bool>();
-            if (castQ && Q.IsReady())
-            {
-                foreach (var minion in myMinions.Where(minion => minion.IsValidTarget()))
-                {
-                    if (Vector3.Distance(minion.ServerPosition, Player.ServerPosition) <= Orbwalking.GetRealAutoAttackRange(Player))
-                    {
-                        Q.Cast();
-
-                    }
-                }
-            }
 
             if (castE && E.IsReady())
             {
                 foreach (var minion in myMinions.Where(minion => minion.IsValidTarget()))
                 {
-                    if (minion.IsValidTarget(Player.AttackRange))
+                    if (minion.IsValidTarget(E.Range))
                     {
-                        E.Cast(minion, QbMenu.Item("NFD").GetValue<bool>());
+                        E.Cast(minion);
                     }
                 }
             }
+
+            if (castQ && Q.IsReady())
+            {
+                foreach (var minion in myMinions.Where(minion => minion.IsValidTarget()))
+                {
+                    if (Vector3.Distance(minion.ServerPosition, Player.ServerPosition) <= Q2.Range && minion.HasBuff("urgotcorrosivedebuff", true))
+                    {
+                        Q2.Cast(minion.ServerPosition);
+                    }
+                    if (Vector3.Distance(minion.ServerPosition, Player.ServerPosition) <= Q.Range)
+                    {
+                        Q.Cast(minion.ServerPosition);
+                    }
+                }
+            }
+
         }
 
+        public static void Lasthit()
+        {
+            if (!Orbwalking.CanMove(40) || Player.Mana <= Player.MaxMana * (QbMenu.Item("LastMana").GetValue<int>() / 100.0)) return;
+            var myMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range);
+            var castQ = QbMenu.Item("useLhQ").GetValue<bool>();
 
+            if (castQ && Q.IsReady())
+            {
+                foreach (var minion in myMinions.Where(minion => PlayerH.GetSpellDamage(minion,SpellSlot.Q) >= HealthPrediction.GetHealthPrediction(minion, (int)(Q.Delay * 1000))))
+                {
+                        Q.Cast(minion.ServerPosition);
+                }
+            }
+        }
 
     }
 }
