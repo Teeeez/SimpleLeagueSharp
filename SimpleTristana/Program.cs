@@ -191,7 +191,7 @@ namespace SimpleTristana
             var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && E.IsKillable(obj));
             if (unit != null)
             {
-                E.Cast(unit);
+                E.Cast(unit, QbMenu.Item("NFD").GetValue<bool>());
             }
         }
 
@@ -200,7 +200,7 @@ namespace SimpleTristana
             var unit = ObjectManager.Get<Obj_AI_Hero>().First(obj => obj.IsValidTarget(600) && R.IsKillable(obj));
             if (unit != null)
             {
-                R.Cast(unit);
+                R.Cast(unit, QbMenu.Item("NFD").GetValue<bool>());
             }
         }
 

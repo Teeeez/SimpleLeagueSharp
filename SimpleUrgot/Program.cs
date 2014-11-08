@@ -103,6 +103,7 @@ namespace SimpleUrgot
 
             QbMenu.AddToMainMenu();
 
+            CustomEvents.Unit.OnLevelUp += OnLevelUp;
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnGameUpdate += Game_OnGameUpdate; // onTick in bol
 
@@ -158,6 +159,16 @@ namespace SimpleUrgot
             {
                 Utility.DrawCircle(Player.ServerPosition, E.Range, Color.Chartreuse);
             }
+        }
+
+        public static void OnLevelUp(Obj_AI_Base sender, CustomEvents.Unit.OnLevelUpEventArgs args)
+        {
+            if (!sender.IsValid || !sender.IsMe)
+                return;
+            if (args.NewLevel == 11)
+                R = new Spell(SpellSlot.R, 700);
+            if (args.NewLevel == 16)
+                R = new Spell(SpellSlot.R, 850);
         }
 
         public static void BilgeSteal()
@@ -238,9 +249,6 @@ namespace SimpleUrgot
             {
                 Q.Cast(target.ServerPosition);
             }
-
-            
-
         }
 
         public static void Harass()
@@ -324,6 +332,5 @@ namespace SimpleUrgot
                 }
             }
         }
-
     }
 }
