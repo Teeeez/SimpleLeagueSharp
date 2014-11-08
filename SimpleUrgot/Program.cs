@@ -192,7 +192,8 @@ namespace SimpleUrgot
         public static void Combo()
         {
             var target = SimpleTs.GetTarget(Q2.Range, SimpleTs.DamageType.Physical);
-            if (target == null || Player.Mana <= Player.MaxMana * (QbMenu.Item("ComboMana").GetValue<int>() / 100.0)) return;
+            if (target == null) return;
+            //Player.Mana <= Player.MaxMana * (QbMenu.Item("ComboMana").GetValue<int>() / 100.0)
 
             var castQ = QbMenu.Item("useQ").GetValue<bool>();
             var castE = QbMenu.Item("useE").GetValue<bool>();
@@ -254,7 +255,7 @@ namespace SimpleUrgot
         public static void Harass()
         {
             var target = SimpleTs.GetTarget(Q2.Range, SimpleTs.DamageType.Physical);
-            if (target == null || Player.Mana <= Player.MaxMana * (QbMenu.Item("HarassMana").GetValue<int>() / 100.0)) return;
+            if (target == null) return;
             var castQ = QbMenu.Item("useHQ").GetValue<bool>();
             var castE = QbMenu.Item("useHE").GetValue<bool>();
             var castW = QbMenu.Item("useHW").GetValue<bool>();
@@ -285,7 +286,7 @@ namespace SimpleUrgot
 
         public static void Laneclear()
         {
-            if (!Orbwalking.CanMove(40) || Player.Mana <= Player.MaxMana * (QbMenu.Item("LaneMana").GetValue<int>() / 100.0)) return;
+            if (!Orbwalking.CanMove(40)) return;
             var myMinions = MinionManager.GetMinions(Player.ServerPosition, Player.AttackRange);
             var castQ = QbMenu.Item("useLQ").GetValue<bool>();
             var castE = QbMenu.Item("useLE").GetValue<bool>();
@@ -320,7 +321,7 @@ namespace SimpleUrgot
 
         public static void Lasthit()
         {
-            if (!Orbwalking.CanMove(40) || Player.Mana <= Player.MaxMana * (QbMenu.Item("LastMana").GetValue<int>() / 100.0)) return;
+            if (!Orbwalking.CanMove(40)) return;
             var myMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range);
             var castQ = QbMenu.Item("useLhQ").GetValue<bool>();
 
