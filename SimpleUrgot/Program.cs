@@ -26,6 +26,7 @@ namespace SimpleUrgot
         public static Items.Item BladeItem = new Items.Item(3153, 450);
         public static Items.Item GhostItem = new Items.Item(3142, float.MaxValue);
         public static Items.Item MuraItem = new Items.Item(3042, float.MaxValue);
+        public static double Test2 = 0;
 
         public static Menu QbMenu;
         static void Main(string[] args)
@@ -61,7 +62,7 @@ namespace SimpleUrgot
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("useW", "Use W").SetValue(false));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("useSW", "Smart W").SetValue(false));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("useE", "Use E").SetValue(false));
-            QbMenu.SubMenu("Combo").AddItem(new MenuItem("ComboMana", "Mana").SetValue(new Slider(1, 1, 100)));
+            QbMenu.SubMenu("Combo").AddItem(new MenuItem("ComboMana", "Mana").SetValue(new Slider(50, 1, 100)));
             QbMenu.SubMenu("Combo").AddItem(new MenuItem("ComboKey", "Combo Key").SetValue(new KeyBind(32, KeyBindType.Press)));
             //Harass menu
             QbMenu.AddSubMenu(new Menu("Harass", "Harass"));
@@ -145,17 +146,17 @@ namespace SimpleUrgot
 
         static void Drawing_OnDraw(EventArgs args)
         {
-            if (!QbMenu.Item("drawq").GetValue<bool>() && Q.IsReady())
+            if (QbMenu.Item("drawq").GetValue<bool>() && Q.IsReady())
             {
                 Utility.DrawCircle(Player.ServerPosition,Q.Range,Color.Crimson);
             }
 
-            if (!QbMenu.Item("drawq2").GetValue<bool>() && Q.IsReady())
+            if (QbMenu.Item("drawq2").GetValue<bool>() && Q.IsReady())
             {
                 Utility.DrawCircle(Player.ServerPosition, Q2.Range, Color.DarkRed);
             }
 
-            if (!QbMenu.Item("drawE").GetValue<bool>() && E.IsReady())
+            if (QbMenu.Item("drawe").GetValue<bool>() && E.IsReady())
             {
                 Utility.DrawCircle(Player.ServerPosition, E.Range, Color.Chartreuse);
             }
@@ -192,9 +193,7 @@ namespace SimpleUrgot
         public static void Combo()
         {
             var target = SimpleTs.GetTarget(Q2.Range, SimpleTs.DamageType.Physical);
-            if (target == null) return;
-            //Player.Mana <= Player.MaxMana * (QbMenu.Item("ComboMana").GetValue<int>() / 100.0)
-
+            if (target == null || Player.Mana < Player.MaxMana * QbMenu.Item("ComboMana").GetValue<Slider>().Value / 100) return;
             var castQ = QbMenu.Item("useQ").GetValue<bool>();
             var castE = QbMenu.Item("useE").GetValue<bool>();
             var castW = QbMenu.Item("useW").GetValue<bool>();
@@ -255,7 +254,7 @@ namespace SimpleUrgot
         public static void Harass()
         {
             var target = SimpleTs.GetTarget(Q2.Range, SimpleTs.DamageType.Physical);
-            if (target == null) return;
+            if (target == null || Player.Mana < Player.MaxMana * QbMenu.Item("HarassMana").GetValue<Slider>().Value / 100) return;
             var castQ = QbMenu.Item("useHQ").GetValue<bool>();
             var castE = QbMenu.Item("useHE").GetValue<bool>();
             var castW = QbMenu.Item("useHW").GetValue<bool>();
@@ -286,7 +285,7 @@ namespace SimpleUrgot
 
         public static void Laneclear()
         {
-            if (!Orbwalking.CanMove(40)) return;
+            if (!Orbwalking.CanMove(40) || Player.Mana < Player.MaxMana * QbMenu.Item("LaneMana").GetValue<Slider>().Value / 100) return;
             var myMinions = MinionManager.GetMinions(Player.ServerPosition, Player.AttackRange);
             var castQ = QbMenu.Item("useLQ").GetValue<bool>();
             var castE = QbMenu.Item("useLE").GetValue<bool>();
@@ -321,7 +320,7 @@ namespace SimpleUrgot
 
         public static void Lasthit()
         {
-            if (!Orbwalking.CanMove(40)) return;
+            if (!Orbwalking.CanMove(40) || Player.Mana < Player.MaxMana * QbMenu.Item("LastMana").GetValue<Slider>().Value / 100) return;
             var myMinions = MinionManager.GetMinions(Player.ServerPosition, Q.Range);
             var castQ = QbMenu.Item("useLhQ").GetValue<bool>();
 
